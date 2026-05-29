@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lifepack G10 Simulator - Home</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: #11111b;
+            color: #cdd6f4;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .hub-container {
+            text-align: center;
+            background: #1e1e2e;
+            padding: 50px 40px;
+            border-radius: 16px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+            border: 1px solid #313244;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #f5c2e7;
+            font-size: 32px;
+            margin-bottom: 10px;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        .subtitle {
+            color: #a6adc8;
+            font-size: 16px;
+            margin-bottom: 40px;
+        }
+
+        .grid-pulsanti {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .card-link {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .btn-hub {
+            background: #313244;
+            border: 2px solid #45475a;
+            border-radius: 12px;
+            padding: 30px 20px;
+            cursor: pointer;
+            transition: all 0.25s ease-in-out;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+        }
+
+        .btn-hub:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        /* Stile specifico pulsante REGISTA */
+        .btn-regista:hover {
+            border-color: #f5c2e7;
+            background: rgba(245, 194, 231, 0.05);
+        }
+        .btn-regista .icona {
+            font-size: 40px;
+            margin-bottom: 15px;
+        }
+        .btn-regista h2 {
+            color: #f5c2e7;
+            font-size: 20px;
+            margin-bottom: 8px;
+        }
+
+        /* Stile specifico pulsante MONITOR */
+        .btn-monitor:hover {
+            border-color: #89b4fa;
+            background: rgba(137, 180, 250, 0.05);
+        }
+        .btn-monitor .icona {
+            font-size: 40px;
+            margin-bottom: 15px;
+        }
+        .btn-monitor h2 {
+            color: #89b4fa;
+            font-size: 20px;
+            margin-bottom: 8px;
+        }
+
+        .btn-hub p {
+            color: #a6adc8;
+            font-size: 13px;
+            line-height: 1.4;
+        }
+
+        .footer-credit {
+            margin-top: 40px;
+            font-size: 11px;
+            color: #585b70;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="hub-container">
+        <h1>Lifepack G10</h1>
+        <p class="subtitle">Simulatore di Monitor/Defibrillatore Avanzato per Scenari Clinici</p>
+        
+        <div class="grid-pulsanti">
+            <a href="regista.html" target="_blank" class="card-link">
+                <div class="btn-hub btn-regista">
+                    <div class="icona">🎬</div>
+                    <h2>Pannello Regista</h2>
+                    <p>Gestisci parametri vitali, ritmi cardiaci e invia comandi al monitor.</p>
+                </div>
+            </a>
+
+            <a href="monitor.html" target="_blank" class="card-link">
+                <div class="btn-hub btn-monitor">
+                    <div class="icona">🖥️</div>
+                    <h2>Monitor Studente</h2>
+                    <p>Visualizza i tracciati e interagisci con le funzioni di defibrillazione e NIBP.</p>
+                </div>
+            </a>
+        </div>
+
+        <div class="footer-credit">
+            Interactive Medical Simulation Software
+        </div>
+    </div>
+
+</body>
+</html>

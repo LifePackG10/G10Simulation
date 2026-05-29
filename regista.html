@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lifepack G10 - Pannello Regista v9.4</title>
+    <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #1e1e2e; color: #cdd6f4; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        h1, h2 { color: #f5c2e7; margin-bottom: 10px; }
+        .container { width: 100%; max-width: 950px; background: #313244; padding: 20px; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
+        .setup-box { display: flex; gap: 15px; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #45475a; }
+        input[type="number"], select { background: #11111b; color: #cdd6f4; border: 1px solid #45475a; border-radius: 6px; padding: 8px 12px; font-size: 16px; }
+        .btn { background: #a6e3a1; color: #11111b; border: none; padding: 10px 20px; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.2s; }
+        .btn:hover { background: #94e2d5; }
+        
+        .grid-regia { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 20px; margin-top: 15px; }
+        .panel { background: #1e1e2e; padding: 15px; border-radius: 8px; border: 1px solid #45475a; }
+        .control-group { margin-bottom: 15px; display: flex; flex-direction: column; gap: 5px; }
+        label { font-size: 14px; color: #bac2de; font-weight: 600; }
+        
+        .switch-group { display: flex; flex-direction: column; gap: 10px; background: #252538; padding: 12px; border-radius: 6px; margin-bottom: 15px; }
+        .switch-row { display: flex; align-items: center; justify-content: space-between; }
+        
+        /* Box speciale impostazioni scarica manuale */
+        .box-terapia-regia { background: #181825; border: 2px solid #fab387; border-radius: 8px; padding: 12px; margin-bottom: 15px; }
+        .box-terapia-regia h3 { color: #fab387; margin: 0 0 10px 0; font-size: 16px; text-transform: uppercase; text-align: center; }
+
+        .log-box { background: #11111b; border: 1px solid #45475a; border-radius: 6px; padding: 10px; height: 350px; overflow-y: auto; font-family: 'Courier New', Courier, monospace; font-size: 13px; color: #a6e3a1; }
+        .badge { background: #f38ba8; color: #11111b; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 11px; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Lifepack G10 - Regia Cloni</h1>
+        
+        <div class="setup-box">
+            <label for="pin-regista">PIN Regia:</label>
+            <input type="number" id="pin-regista" value="1234" style="width: 100px;">
+            <button class="btn" id="btn-attiva-regia">Attiva Server Regia</button>
+            <span id="stato-connessione" style="color: #fab387; font-weight: bold;">Disconnesso</span>
+        </div>
+
+        <div class="grid-regia">
+            <div class="panel">
+                
+                <div class="box-terapia-regia">
+                    <h3>Opzioni Esito Post-Scarica</h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div class="control-group">
+                            <label for="regia-esito-scarica">Se Scarica Corretta:</label>
+                            <select id="regia-esito-scarica">
+                                <option value="SUCCESSO_SINUSALE">Successo -> Sinusale</option>
+                                <option value="SUCCESSO_TACT">Successo -> Tachicardia Sin.</option>
+                                <option value="FALLIMENTO">Fallimento (Resta Invariato)</option>
+                                <option value="ASISTOLIA">Vai in Asistolia</option>
+                                <option value="PEA">Genera PEA (Ritmo senza polso)</option>
+                            </select>
+                        </div>
+                        <div class="control-group">
+                            <label for="regia-joule-soglia">Soglia Minima Joule:</label>
+                            <input type="number" id="regia-joule-soglia" value="150" min="0" max="360" style="text-align: center;">
+                        </div>
+                    </div>
+                </div>
+
+                <h2>Parametri Vitali</h2>
+                
+                <div class="switch-group">
+                    <div class="switch-row">
+                        <label>Cavo ECG Collegato:</label>
+                        <input type="checkbox" id="c-ecg-connected" onchange="inviaParametri()">
+                    </div>
+                    <div class="switch-row">
+                        <label>Sensore SpO2 Collegato:</label>
+                        <input type="checkbox" id="c-spo2-connected" onchange="inviaParametri()">
+                    </div>
+                    <div class="switch-row">
+                        <label>Modulo EndTidal (EtCO2) Coll.:</label>
+                        <input type="checkbox" id="c-etco2-connected" onchange="inviaParametri()">
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label for="r-ritmo">Ritmo ECG:</label>
+                    <select id="r-ritmo" onchange="inviaParametri()">
+                        <option value="Sinusale">Sinusale Normale</option>
+                        <option value="Sinusale tact">Tachicardia Sinusale</option>
+                        <option value="Sinusale brac">Bradicardia Sinusale</option>
+                        <option value="Fibrillazione">Fibrillazione Atriale</option>
+                        <option value="Flutter atriale">Flutter Atriale</option>
+                        <option value="TPSV">TPSV</option>
+                        <option value="IMA">STEMI (IMA)</option>
+                        <option value="BAV 3">BAV III Grado</option>
+                        <option value="TV con polso">TV con Polso</option>
+                        <option value="TV senza polso">TV senza Polso ⚡</option>
+                        <option value="FV">FV (Fibrillazione Ventricolare) ⚡</option>
+                        <option value="Torsione di punta">Torsione di Punta ⚡</option>
+                        <option value="Asistolia">Asistolia ❌</option>
+                        <option value="Non in lettura">Linea Piatta / No Segnale</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label for="r-fc">Frequenza Cardiaca (HR):</label>
+                    <input type="number" id="r-fc" value="72" min="0" max="250" oninput="inviaParametri()">
+                </div>
+
+                <div class="control-group">
+                    <label>Pressione Arteriosa (NIBP):</label>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="number" id="r-pas" value="120" placeholder="Sistolica" style="width: 45%;" oninput="inviaParametri()">
+                        <input type="number" id="r-pad" value="80" placeholder="Diastolica" style="width: 45%;" oninput="inviaParametri()">
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label for="r-spo2">Saturazione O2 (SpO2 %):</label>
+                    <input type="number" id="r-spo2" value="98" min="0" max="100" oninput="inviaParametri()">
+                </div>
+
+                <div class="control-group">
+                    <label for="r-etco2">Valore EtCO2 (mmHg):</label>
+                    <input type="number" id="r-etco2" value="38" min="0" max="75" oninput="inviaParametri()">
+                </div>
+
+                <div class="control-group">
+                    <label for="r-fr">Frequenza Respiratoria (FR):</label>
+                    <input type="number" id="r-fr" value="14" min="0" max="60" oninput="inviaParametri()">
+                </div>
+            </div>
+
+            <div class="panel">
+                <h2>Log Azioni Monitor Studente</h2>
+                <div class="log-box" id="log-studenti">In attesa di azioni dalla plancia shock/pacing...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const btnAttiva = document.getElementById('btn-attiva-regia');
+        const pinInput = document.getElementById('pin-regista');
+        const statoConnessione = document.getElementById('stato-connessione');
+        let peer = null;
+        let monitorConn = null;
+
+        btnAttiva.addEventListener('click', () => {
+            const pin = pinInput.value.trim();
+            if (pin.length !== 4) return alert("Inserisci un PIN valido di 4 cifre!");
+
+            statoConnessione.innerText = "Attivazione server...";
+            peer = new Peer("sim-regista-" + pin);
+
+            peer.on('open', (id) => {
+                statoConnessione.innerText = "In attesa del Monitor...";
+                statoConnessione.style.color = "#ffff00";
+            });
+
+            peer.on('connection', (conn) => {
+                if (conn.peer.startsWith("sim-monitor-")) {
+                    monitorConn = conn;
+                    statoConnessione.innerText = "Monitor Sincronizzato!";
+                    statoConnessione.style.color = "#a6e3a1";
+                    
+                    setTimeout(inviaParametri, 800);
+
+                    monitorConn.on('data', (data) => {
+                        if (data.azioneStudente) {
+                            aggiungiAlLog(data.azioneStudente);
+                        }
+
+                        // Intercettazione dell'impulso della scarica
+                        if (data.datiScarica) {
+                            gestisciRitmoPostScaricaManuale(data.datiScarica.joule, data.datiScarica.modalita);
+                        }
+                    });
+                }
+            });
+
+            peer.on('error', (err) => {
+                console.error(err);
+                statoConnessione.innerText = "Errore di connessione.";
+                statoConnessione.style.color = "#f38ba8";
+            });
+        });
+
+        function gestisciRitmoPostScaricaManuale(joule, modalita) {
+            const selettoreRitmo = document.getElementById('r-ritmo');
+            const ritmoPreScarica = selettoreRitmo.value;
+            
+            const esitoImpostato = document.getElementById('regia-esito-scarica').value;
+            const jouleSoglia = parseInt(document.getElementById('regia-joule-soglia').value);
+
+            // Ritmi sui cui ha senso applicare la scarica elettrica
+            const ritmiArrestoTrattabili = ["FV", "TV senza polso", "Torsione di punta"];
+            
+            let nuovoRitmo = ritmoPreScarica;
+            let logNote = "";
+
+            // Controlla se il ritmo iniziale è un ritmo defibrillabile o cardiovertibile
+            if (ritmiArrestoTrattabili.includes(ritmoPreScarica) || ritmoPreScarica === "Fibrillazione" || ritmoPreScarica === "TPSV") {
+                
+                // Controllo dei joule erogati rispetto alla scelta del formatore
+                if (joule >= jouleSoglia) {
+                    if (esitoImpostato === "SUCCESSO_SINUSALE") {
+                        nuovoRitmo = "Sinusale";
+                        document.getElementById('r-fc').value = 75;
+                        document.getElementById('r-pas').value = 115;
+                        document.getElementById('r-pad').value = 75;
+                    } else if (esitoImpostato === "SUCCESSO_TACT") {
+                        nuovoRitmo = "Sinusale tact";
+                        document.getElementById('r-fc').value = 125;
+                        document.getElementById('r-pas').value = 100;
+                        document.getElementById('r-pad').value = 60;
+                    } else if (esitoImpostato === "ASISTOLIA") {
+                        nuovoRitmo = "Asistolia";
+                        document.getElementById('r-fc').value = 0;
+                    } else if (esitoImpostato === "PEA") {
+                        nuovoRitmo = "Sinusale brac"; // Mostra un ritmo visivo ma senza polso reale (il monitor spegnerà la pleth automaticamente)
+                        document.getElementById('r-fc').value = 45;
+                    } else if (esitoImpostato === "FALLIMENTO") {
+                        logNote = " (Esito impostato su Fallimento manuale)";
+                    }
+                } else {
+                    logNote = ` (Scarica INEFFICACE: Joule erogati ${joule}J inferiori alla soglia di regia di ${jouleSoglia}J)`;
+                }
+
+                // Applica il cambio se c'è stata una variazione delle impostazioni
+                if (nuovoRitmo !== ritmoPreScarica) {
+                    selettoreRitmo.value = nuovoRitmo;
+                    aggiungiAlLog(`<b>[REGIA]</b> Shock Efficace! Ritmo convertito automaticamente da ${ritmoPreScarica} a <b>${nuovoRitmo}</b>.`);
+                } else {
+                    aggiungiAlLog(`<b>[REGIA]</b> Il ritmo resta <b>${ritmoPreScarica}</b>${logNote}.`);
+                }
+
+                // Invia i parametri aggiornati al monitor istantaneamente
+                inviaParametri();
+            }
+        }
+
+        function inviaParametri() {
+            if (!monitorConn || !monitorConn.open) return;
+
+            const ecgCollegato = document.getElementById('c-ecg-connected').checked;
+            const spo2Collegato = document.getElementById('c-spo2-connected').checked;
+            const etco2Collegato = document.getElementById('c-etco2-connected').checked;
+
+            let pacchettoDati = {
+                fc: document.getElementById('r-fc').value,
+                pas: document.getElementById('r-pas').value,
+                pad: document.getElementById('r-pad').value,
+                spo2: document.getElementById('r-spo2').value,
+                fr: document.getElementById('r-fr').value,
+                etco2: document.getElementById('r-etco2').value,
+                ritmo: document.getElementById('r-ritmo').value,
+                ecgConnected: ecgCollegato,
+                spo2Connected: spo2Collegato,
+                etco2Connected: etco2Collegato
+            };
+
+            monitorConn.send(pacchettoDati);
+        }
+
+        function aggiungiAlLog(testo) {
+            const logBox = document.getElementById('log-studenti');
+            const ora = new Date().toLocaleTimeString();
+            if(logBox.innerText === "In attesa di azioni dalla plancia shock/pacing...") {
+                logBox.innerHTML = "";
+            }
+            logBox.innerHTML += `<div><span class="badge">${ora}</span> ${testo}</div>`;
+            logBox.scrollTop = logBox.scrollHeight;
+        }
+    </script>
+</body>
+</html>
