@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Monitor Lifepack G10 v9.6 - Pressione Statica</title>
+    <title>Monitor Lifepack G10 v12.3 - Trasmissione CO Realistica</title>
     <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
     <style>
         body { background-color: #000; color: #fff; font-family: 'Arial', sans-serif; margin: 0; padding: 10px; height: 100vh; box-sizing: border-box; display: flex; overflow: hidden; user-select: none; }
@@ -28,31 +28,22 @@
         
         .text-fc { color: #2ecc71; }
         .text-pa { color: #ffffff; }
-        .text-spo2 { color: #ffffff; }
-        .text-etco2 { color: #ffffff; }
+        .text-spo2 { color: #2980b9; }
+        .text-etco2 { color: #e67e22; }
         
         .centro-destra-container { display: flex; flex-direction: column; height: 100%; gap: 10px; overflow: hidden; grid-column: 2; }
         
         .tracciati-container { 
             height: 65%; 
             display: grid; 
-            grid-template-rows: repeat(5, 1fr); 
+            grid-template-rows: repeat(3, 1fr); 
             gap: 6px; 
         }
         
-        #riga-onda-ecg { grid-row: 1; }   
-        #riga-onda-pleth { grid-row: 2; } 
-        
         .onde-row { position: relative; background: #050505; border-radius: 6px; border: 1px solid #111; overflow: hidden; display: flex; align-items: center; height: 100%; }
-        .titolo-onda { position: absolute; top: 6px; left: 12px; font-size: 14px; font-weight: bold; z-index: 10; background: rgba(5,5,5,0.6); padding: 2px 5px; border-radius: 3px; }
+        .titolo-onda { position: absolute; top: 6px; left: 12px; font-size: 14px; font-weight: bold; z-index: 10; background: rgba(0,0,0,0.6); padding: 2px 5px; border-radius: 3px; }
         
-        .scroller-wrapper { display: flex; width: 200%; height: 100%; position: relative; align-items: center; }
-        .scroller-img { height: 100%; width: 50%; object-fit: contain; animation: scorrimentoContinuo 15s linear infinite; }
-        @keyframes scorrimentoContinuo { 0% { transform: translateX(0%); } 100% { transform: translateX(-100%); } }
-        
-        .linea-piatta { width: 100%; height: 2px; position: absolute; top: 50%; left: 0; display: none; }
-        #ecg-piatta { background: #2ecc71; }
-        #pleth-piatta { background: #2980b9; }
+        canvas { width: 100%; height: 100%; display: block; }
 
         .terapia-container { height: 33%; background: #1a3668; border: 3px solid #112244; border-radius: 8px; display: flex; flex-direction: column; box-sizing: border-box; overflow: hidden; }
         .terapia-tabs { display: flex; height: 40px; background: #112244; border-bottom: 2px solid #0d1b33; }
@@ -68,28 +59,56 @@
         .schermo-nero { background: #000; border-radius: 10px; width: 100%; height: 50px; display: flex; align-items: center; justify-content: center; font-family: monospace; font-size: 22px; font-weight: bold; color: #ffff00; border: 1px solid #224488; }
         
         .tastiera-energie { flex: 1; display: grid; grid-template-columns: repeat(5, 1fr); grid-template-rows: repeat(2, 1fr); gap: 6px; height: 100%; }
-        .btn-energia { background: #3b65b8; border: 1px solid #294c94; color: #fff; font-size: 15px; font-weight: bold; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.1s; }
+        .btn-energia { background: #3b65b8; border: 1px solid #294c94; color: #fff; font-size: 14px; font-weight: bold; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.1s; }
         .btn-energia:hover { background: #4a77cc; }
         .btn-energia:active { background: #ffff00; color: #000; }
 
-        .colonna-hardware-buttons { display: flex; flex-direction: column; justify-content: center; gap: 4px; height: 100%; min-width: 110px; }
-        .btn-hw { width: 100%; height: 28px; border-radius: 6px; border: 2px solid #222; color: white; font-weight: bold; font-size: 11px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; text-transform: uppercase; box-shadow: 0 3px 5px rgba(0,0,0,0.4); transition: transform 0.1s; }
+        .colonna-hardware-buttons { display: flex; flex-direction: column; justify-content: space-between; gap: 4px; height: 100%; min-width: 110px; }
+        .btn-hw { width: 100%; height: 26px; border-radius: 6px; border: 2px solid #222; color: white; font-weight: bold; font-size: 11px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; text-transform: uppercase; box-shadow: 0 3px 5px rgba(0,0,0,0.4); transition: transform 0.1s; }
         .btn-hw:active { transform: scale(0.95); }
         
-        .btn-hw-carica { background: #e67e22; border-color: #d35400; height: 32px; }
+        .btn-hw-carica { background: #e67e22; border-color: #d35400; height: 30px; }
         .btn-hw-carica.pronto { animation: flashArancio 0.4s infinite alternate; }
         
-        .btn-hw-scarica { background: #c0392b; border-color: #962d22; font-size: 12px; opacity: 0.3; cursor: not-allowed; height: 32px; }
+        .btn-hw-scarica { background: #c0392b; border-color: #962d22; font-size: 12px; opacity: 0.3; cursor: not-allowed; height: 30px; }
         .btn-hw-scarica.pronto { opacity: 1; cursor: pointer; animation: flashRossoTerapia 0.3s infinite alternate; }
 
-        .btn-hw-psni { background: #f39c12; border-color: #d35400; color: #000; font-size: 12px; font-weight: bold; }
+        .btn-hw-psni { background: #f39c12; border-color: #d35400; color: #000; font-size: 11px; font-weight: bold; }
         .btn-hw-psni.misurazione-in-corso { background: #7f8c8d; border-color: #34495e; color: #fff; cursor: not-allowed; animation: flashGrigioPsni 0.6s infinite alternate; }
 
-        .btn-hw-analisi { background: #f1c40f; border-color: #f39c12; color: #000; font-size: 12px; font-weight: 900; }
+        .btn-hw-analisi { background: #f1c40f; border-color: #f39c12; color: #000; font-size: 11px; font-weight: 900; }
+        
+        .btn-hw-12lead { background: #8e44ad; border-color: #732d91; color: #fff; font-size: 11px; font-weight: bold; }
+        .btn-hw-12lead.attivo { background: #2ecc71; border-color: #27ae60; color: #000; animation: flashVerreLead 0.4s infinite alternate; }
 
+        /* SCHERMATA DI ACQUISIZIONE OVERLAY (5 SECONDI) */
+        #loading-12-lead-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.95); z-index: 190; display: none; flex-direction: column; justify-content: center; align-items: center; color: #8e44ad; }
+        .loading-text { font-size: 28px; font-weight: bold; animation: lampeggioTesto 0.8s infinite alternate; margin-bottom: 20px; font-family: monospace; text-shadow: 0 0 10px #8e44ad; }
+        .progress-bar-container { width: 350px; height: 12px; background: #222; border: 1px solid #444; border-radius: 6px; overflow: hidden; }
+        .progress-bar-fill { width: 0%; height: 100%; background: #8e44ad; box-shadow: 0 0 8px #8e44ad; transition: width 0.1s linear; }
+
+        /* POPUP SCREEN OVERLAY PER ECG 12 LEAD */
+        #popup-12-lead-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.95); z-index: 200; display: none; flex-direction: column; justify-content: center; align-items: center; box-sizing: border-box; padding: 20px; }
+        .area-immagine-12l { flex: 1; width: 100%; display: flex; justify-content: center; align-items: center; overflow: hidden; position: relative; margin-bottom: 15px; }
+        #popup-12-lead-overlay img { max-width: 100%; max-height: 100%; border: 3px solid #444; border-radius: 8px; box-shadow: 0 0 30px rgba(255,255,255,0.15); background-color: #fff; object-fit: contain; }
+        .testo-errore-12l { font-size: 24px; font-weight: bold; color: #e74c3c; text-align: center; }
+        
+        /* PULSANTE "TRASMETTI ECG ALLA CO" */
+        .area-pulsante-trasmissione { width: 100%; display: flex; justify-content: center; padding-bottom: 10px; }
+        .btn-trasmetti-co { background: #2980b9; color: white; border: 2px solid #2471a3; padding: 12px 35px; border-radius: 30px; font-size: 16px; font-weight: bold; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 4px 15px rgba(41,128,185,0.4); transition: background 0.2s, transform 0.1s; }
+        .btn-trasmetti-co:hover { background: #3498db; }
+        .btn-trasmetti-co:active { transform: scale(0.96); }
+
+        /* SCHERMATA DI INVIO ALLA CO (3 SECONDI) OVERLAY */
+        #transmission-co-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.95); z-index: 250; display: none; flex-direction: column; justify-content: center; align-items: center; }
+        .transmission-text { font-size: 26px; font-weight: bold; color: #3498db; font-family: monospace; text-shadow: 0 0 10px #2980b9; margin-bottom: 20px; text-align: center; }
+        .progress-co-fill { width: 0%; height: 100%; background: #3498db; box-shadow: 0 0 10px #3498db; transition: width 0.1s linear; }
+
+        @keyframes lampeggioTesto { 0% { opacity: 0.4; } 100% { opacity: 1; } }
         @keyframes flashGrigioPsni { 0% { opacity: 0.6; } 100% { opacity: 1; } }
         @keyframes flashArancio { 0% { background-color: #e67e22; } 100% { background-color: #ffaa44; } }
         @keyframes flashRossoTerapia { 0% { background-color: #c0392b; box-shadow: 0 0 4px #ff0000; } 100% { background-color: #ff0000; box-shadow: 0 0 15px #ff0000; } }
+        @keyframes flashVerreLead { 0% { background-color: #2ecc71; box-shadow: 0 0 2px #2ecc71; } 100% { background-color: #2bef83; box-shadow: 0 0 10px #2ecc71; } }
 
         .allarme-attivo .param-label-block { animation: lampeggioRossoLabel 0.5s infinite alternate; }
         @keyframes lampeggioRossoLabel { 0% { background-color: #b30000; color: #fff; } 100% { background-color: #ff0000; color: #fff; } }
@@ -99,12 +118,37 @@
 
     <div id="setup-screen">
         <div class="setup-card">
-            <h2>Lifepack G10 - Monitor</h2>
+            <h2>Lifepack G10 - Monitor Canvas</h2>
             <p>Inserisci il PIN del Regista per accoppiare gli schermi:</p>
             <input type="number" id="pin-monitor" value="1234">
             <br>
             <button class="btn-connect" id="btn-connetti">Sincronizza Monitor</button>
             <p id="stato-setup" style="color: #888; margin-top: 15px;"></p>
+        </div>
+    </div>
+
+    <div id="loading-12-lead-overlay">
+        <div class="loading-text">Acquisizione 12 derivazioni in corso...</div>
+        <div class="progress-bar-container">
+            <div id="progress-bar-fill" class="progress-bar-fill"></div>
+        </div>
+    </div>
+
+    <div id="transmission-co-overlay">
+        <div id="testo-trasmissione-co" class="transmission-text">Invio tracciato alla Centrale Operativa...</div>
+        <div class="progress-bar-container">
+            <div id="progress-co-fill" class="progress-co-fill"></div>
+        </div>
+    </div>
+
+    <div id="popup-12-lead-overlay">
+        <div class="area-immagine-12l">
+            <img id="immagine-popup-12l" src="" alt="12 Lead Ecg Screen">
+            <div id="errore-popup-12l" class="testo-errore-12l" style="display: none;">⚠️ NESSUN ECG A 12 DERIVAZIONI CARICATO IN REGIA</div>
+        </div>
+        
+        <div class="area-pulsante-trasmissione">
+            <button class="btn-trasmetti-co" onclick="avviaTrasmissioneCO()">✉️ Trasmetti ECG alla CO</button>
         </div>
     </div>
 
@@ -135,21 +179,18 @@
         <div class="centro-destra-container">
             <div class="tracciati-container">
                 <div class="onde-row" id="riga-onda-ecg">
-                    <div class="titolo-onda text-fc">II</div>
-                    <div id="ecg-scroller" class="scroller-wrapper" style="display: none;">
-                        <img id="ecg-img-1" class="scroller-img" src="ritmi/sinusale.png" alt="ECG">
-                        <img id="ecg-img-2" class="scroller-img" src="ritmi/sinusale.png" alt="ECG">
-                    </div>
-                    <div id="ecg-piatta" class="linea-piatta" style="display: block;"></div>
+                    <div class="titolo-onda text-fc" id="label-derivazione">II</div>
+                    <canvas id="canvas-ecg"></canvas>
                 </div>
                 
                 <div class="onde-row" id="riga-onda-pleth">
                     <div class="titolo-onda" style="color: #2980b9;">PLETH</div>
-                    <div id="pleth-scroller" class="scroller-wrapper" style="display: none;">
-                        <img id="pleth-img-1" class="scroller-img" src="ritmi/sinusale_pleth.png" style="filter: hue-rotate(90deg);" alt="Pleth">
-                        <img id="pleth-img-2" class="scroller-img" src="ritmi/sinusale_pleth.png" style="filter: hue-rotate(90deg);" alt="Pleth">
-                    </div>
-                    <div id="pleth-piatta" class="linea-piatta" style="display: block;"></div>
+                    <canvas id="canvas-pleth"></canvas>
+                </div>
+
+                <div class="onde-row" id="riga-onda-etco2">
+                    <div class="titolo-onda text-etco2">CO2</div>
+                    <canvas id="canvas-etco2"></canvas>
                 </div>
             </div>
 
@@ -177,6 +218,7 @@
                         <button class="btn-hw btn-hw-scarica" id="btn-hw-scarica" onclick="eseguiScaricaLP35()">⚡ SCARICA</button>
                         <button class="btn-hw btn-hw-psni" id="btn-hw-psni" onclick="avviaMisurazionePSNI()">🩺 PSNI</button>
                         <button class="btn-hw btn-hw-analisi" id="btn-hw-analisi" onclick="eseguiAnalisiRitmo()">🔎 ANALISI</button>
+                        <button class="btn-hw btn-hw-12lead" id="btn-hw-12lead" onclick="gestisciPressione12Lead()">📑 12 LEAD</button>
                     </div>
                 </div>
             </div>
@@ -191,75 +233,336 @@
     <script>
         const btnConnetti = document.getElementById('btn-connetti'), pinInput = document.getElementById('pin-monitor'), statoSetup = document.getElementById('stato-setup');
         let peer = null, conn = null;
-        let ecgIsConnected = false;
-        let spo2IsConnected = false;
-        let etco2IsConnected = false;
+        let ecgIsConnected = false, spo2IsConnected = false, etco2IsConnected = false;
         
-        let targetPAS = 120;
-        let targetPAD = 80;
-        let psniInCorso = false;
-        let haMisuratoAlmenoUnaVolta = false;
+        let targetPAS = 120, targetPAD = 80, psniInCorso = false, haMisuratoAlmenoUnaVolta = false;
         let ritmoCorrente = "Sinusale";
+        let pressioneVisualizzataPAS = "--", pressioneVisualizzataPAD = "--";
 
-        // Variabili d'appoggio per memorizzare la pressione visualizzata sul monitor
-        let pressioneVisualizzataPAS = "--";
-        let pressioneVisualizzataPAD = "--";
-
-        let valoriAttuali = { fc: 0, pas: 0, spo2: 0, etco2: 0 };
+        let valoriAttuali = { fc: 60, pas: 0, spo2: 0, etco2: 38, fr: 14 };
         let audioCtx = null, allarmeInterval = null, allarmeSuonoAttivo = false;
-        let lp35Mode = "DEFIB", jouleSelezionati = 200, bpmSelezionati = 70, mASelezionati = 30, lp35Carico = false;
+        
+        let lp35Mode = "DEFIB", jouleSelezionati = 200, bpmSelezionati = 70, mASelezionati = 0, lp35Carico = false;
+        let sogliaCatturaMAnumerica = 50; 
+        let stringaImmagineRicevuta12L = ""; 
+
+        let acquisizioneInCorso = false;
+        let trasmissioneInCorso = false;
+        let loadingTimeout = null;
+        let loadingSoundInterval = null;
 
         const jouleSetStandard = [5, 10, 25, 50, 100, 150, 200, 250, 300, 360];
-        const pacingBpmSet = [40, 50, 60, 70, 80, 90, 100];
-        const pacingMaSet = [10, 20, 30, 40, 50];
+        const pacingBpmSet = [50, 60, 70, 80, 100, 110, 120];
+        const pacingMaSet = [0, 20, 40, 50, 60, 80, 100, 120];
 
-        const mappeImmagini = {
-            "Sinusale": "sinusale.png", "Sinusale tact": "sinusale_tachi.png", "Sinusale brac": "sinusale_bradi.png",
-            "Non in lettura": "non_in_lettura.png", "Asistolia": "asistolia.png", "TV con polso": "tv_polso.png",
-            "TV senza polso": "tv_senza_polso.png", "FV": "fv.png", "IMA": "stemi.png", "TPSV": "tpsv.png",
-            "Fibrillazione": "fa.png", "Flutter atriale": "flutter.png", "Torsione di punta": "torsione.png", "BAV 3": "bav3.png"
-        };
+        const canvasEcg = document.getElementById('canvas-ecg');
+        const ctxEcg = canvasEcg.getContext('2d');
+        const canvasPleth = document.getElementById('canvas-pleth');
+        const ctxPleth = canvasPleth.getContext('2d');
+        const canvasEtco2 = document.getElementById('canvas-etco2');
+        const ctxEtco2 = canvasEtco2.getContext('2d');
 
-        const mappeImmaginiSincro = {
-            "Sinusale": "sinusale_sincro.png", "Sinusale tact": "sinusale_tachi_sincro.png", "Sinusale brac": "sinusale_bradi_sincro.png",
-            "TV con polso": "tv_polso_sincro.png", "IMA": "stemi_sincro.png", "TPSV": "tpsv_sincro.png",
-            "Fibrillazione": "fa_sincro.png", "Flutter atriale": "flutter_sincro.png", "BAV 3": "bav3_sincro.png"
-        };
+        let posX = 0; 
+        const speed = 2.0;       
+        const sweepWidth = 35;   
 
-        const mappePleth = {
-            "Sinusale": "sinusale_pleth.png", "Sinusale tact": "sinusale_tachi_pleth.png", "Sinusale brac": "sinusale_bradi_pleth.png",
-            "TV con polso": "tv_polso_pleth.png", "IMA": "stemi_pleth.png", "TPSV": "tpsv_pleth.png",
-            "Fibrillazione": "fa_pleth.png", "Flutter atriale": "flutter_pleth.png", "BAV 3": "bav3_pleth.png"
-        };
+        let ecgPhase = 0;
+        let atrialPhase = 0; 
+        let faRROffset = 0; 
+        let plethPhase = 0;
+        let etco2Phase = 0; 
 
-        function initAudio() { 
-            if (!audioCtx) { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
-            if (audioCtx && audioCtx.state === 'suspended') { audioCtx.resume(); }
+        function resizeCanvas() {
+            canvasEcg.width = canvasEcg.parentElement.clientWidth;
+            canvasEcg.height = canvasEcg.parentElement.clientHeight;
+            canvasPleth.width = canvasPleth.parentElement.clientWidth;
+            canvasPleth.height = canvasPleth.parentElement.clientHeight;
+            canvasEtco2.width = canvasEtco2.parentElement.clientWidth;
+            canvasEtco2.height = canvasEtco2.parentElement.clientHeight;
+            
+            ctxEcg.fillStyle = "#050505"; ctxEcg.fillRect(0,0,canvasEcg.width,canvasEcg.height);
+            ctxPleth.fillStyle = "#050505"; ctxPleth.fillRect(0,0,canvasPleth.width,canvasPleth.height);
+            ctxEtco2.fillStyle = "#050505"; ctxEtco2.fillRect(0,0,canvasEtco2.width,canvasEtco2.height);
         }
+        window.addEventListener('resize', resizeCanvas);
+        setTimeout(resizeCanvas, 200);
+
+        function gestisciPressione12Lead() {
+            suonaAudioTerapia('clic');
+            const overlay = document.getElementById('popup-12-lead-overlay');
+            
+            if(overlay.style.display === "flex" || trasmissioneInCorso) {
+                chiudiSchermataECG();
+                return;
+            }
+
+            if(acquisizioneInCorso) {
+                annullaAcquisizione12Lead();
+                return;
+            }
+
+            avviaAcquisizione12Lead();
+        }
+
+        function avviaAcquisizione12Lead() {
+            acquisizioneInCorso = true;
+            segnalaAzioneAlRegista("Avviata acquisizione ECG 12 derivazioni...");
+
+            const loadingOverlay = document.getElementById('loading-12-lead-overlay');
+            const progressBar = document.getElementById('progress-bar-fill');
+            const btn12l = document.getElementById('btn-hw-12lead');
+            
+            btn12l.classList.add('attivo');
+            loadingOverlay.style.display = "flex";
+            progressBar.style.width = "0%";
+
+            let durataTotale = 5000; 
+            let intervalloAggiornamento = 50;
+            let tempoTrascorso = 0;
+
+            let progressInterval = setInterval(() => {
+                if(!acquisizioneInCorso) {
+                    clearInterval(progressInterval);
+                    return;
+                }
+                tempoTrascorso += intervalloAggiornamento;
+                let percentuale = (tempoTrascorso / durataTotale) * 100;
+                progressBar.style.width = percentuale + "%";
+                if(tempoTrascorso >= durataTotale) clearInterval(progressInterval);
+            }, intervalloAggiornamento);
+
+            loadingSoundInterval = setInterval(() => { suonaAudioTerapia('clic'); }, 600);
+
+            loadingTimeout = setTimeout(() => {
+                clearInterval(loadingSoundInterval);
+                loadingOverlay.style.display = "none";
+                acquisizioneInCorso = false;
+                mostraPopup12Lead();
+            }, durataTotale);
+        }
+
+        function annullaAcquisizione12Lead() {
+            acquisizioneInCorso = false;
+            clearTimeout(loadingTimeout);
+            clearInterval(loadingSoundInterval);
+            document.getElementById('loading-12-lead-overlay').style.display = "none";
+            document.getElementById('btn-hw-12lead').classList.remove('attivo');
+            segnalaAzioneAlRegista("Acquisizione 12 LEAD annullata dall'operatore.");
+        }
+
+        function mostraPopup12Lead() {
+            const overlay = document.getElementById('popup-12-lead-overlay');
+            const imgElement = document.getElementById('immagine-popup-12l');
+            const errElement = document.getElementById('errore-popup-12l');
+
+            overlay.style.display = "flex";
+            if(stringaImmagineRicevuta12L && stringaImmagineRicevuta12L.trim() !== "") {
+                imgElement.src = stringaImmagineRicevuta12L;
+                imgElement.style.display = "block";
+                errElement.style.display = "none";
+                segnalaAzioneAlRegista("Visualizzato ECG 12 derivazioni sul monitor.");
+            } else {
+                imgElement.style.display = "none";
+                errElement.style.display = "block";
+                segnalaAzioneAlRegista("Tentato calcolo 12 LEAD, ma nessun tracciato caricato.");
+            }
+        }
+
+        function avviaTrasmissioneCO() {
+            if(trasmissioneInCorso) return;
+            trasmissioneInCorso = true;
+            suonaAudioTerapia('clic');
+            segnalaAzioneAlRegista("Studente ha premuto: TRASMETTI ECG ALLA CO");
+
+            const trOverlay = document.getElementById('transmission-co-overlay');
+            const trBar = document.getElementById('progress-co-fill');
+            const trText = document.getElementById('testo-trasmissione-co');
+
+            trText.innerText = "Invio tracciato alla Centrale Operativa...";
+            trText.style.color = "#3498db";
+            trOverlay.style.display = "flex";
+            trBar.style.width = "0%";
+
+            let durataTrasmissione = 3000; 
+            let intervallo = 50;
+            let tempoPassato = 0;
+
+            let trInterval = setInterval(() => {
+                if(!trasmissioneInCorso) {
+                    clearInterval(trInterval);
+                    return;
+                }
+                tempoPassato += intervallo;
+                let percentuale = (tempoPassato / durataTrasmissione) * 100;
+                trBar.style.width = percentuale + "%";
+                if(tempoPassato >= durataTrasmissione) clearInterval(trInterval);
+            }, intervallo);
+
+            let trSoundInterval = setInterval(() => { suonaAudioTerapia('clic'); }, 400);
+
+            setTimeout(() => {
+                clearInterval(trSoundInterval);
+                if(!trasmissioneInCorso) return;
+
+                trText.innerText = "✔ Trasmissione completata!";
+                trText.style.color = "#2ecc71";
+                segnalaAzioneAlRegista("ECG inviato con successo alla CO. Ricezione confermata.");
+
+                setTimeout(() => {
+                    trOverlay.style.display = "none";
+                    chiudiSchermataECG();
+                }, 1200);
+
+            }, durataTrasmissione);
+        }
+
+        function chiudiSchermataECG() {
+            trasmissioneInCorso = false;
+            document.getElementById('transmission-co-overlay').style.display = "none";
+            document.getElementById('popup-12-lead-overlay').style.display = "none";
+            document.getElementById('btn-hw-12lead').classList.remove('attivo');
+        }
+
+        function getEcgSample() {
+            if (!ecgIsConnected || ritmoCorrente === "Non in lettura") return 0;
+            if (lp35Mode === "PACING" && mASelezionati > 0) {
+                if (ecgPhase >= 0 && ecgPhase < 3) return -0.9; 
+                if (mASelezionati >= sogliaCatturaMAnumerica) {
+                    let pPacing = ecgPhase - 3;
+                    if (pPacing >= 0 && pPacing < 18) return Math.sin(pPacing * (Math.PI / 18)) * 1.2; 
+                    if (pPacing >= 18 && pPacing < 45) return -Math.sin((pPacing - 18) * (Math.PI / 27)) * 0.4;
+                    return 0;
+                }
+            }
+            if (ritmoCorrente === "Asistolia") return (Math.random() * 0.03 - 0.015);
+            if (ritmoCorrente === "FV") {
+                return Math.sin(ecgPhase * 0.08) * 0.4 + Math.sin(ecgPhase * 0.18) * 0.3 + (Math.random() * 0.15 - 0.075);
+            }
+            if (ritmoCorrente === "Torsione di punta") {
+                let modulazione = Math.sin(ecgPhase * 0.008);
+                return (Math.sin(ecgPhase * 0.12) * 0.6) * modulazione;
+            }
+            if (ritmoCorrente === "TV con polso" || ritmoCorrente === "TV senza polso") {
+                return Math.sin(ecgPhase * 0.1) * 0.7 + Math.sin(ecgPhase * 0.2) * 0.15;
+            }
+            if (ritmoCorrente === "BAV 3") {
+                let componenteOndaP = 0, componenteQRS_T = 0;
+                if (atrialPhase > 5 && atrialPhase < 20) componenteOndaP = Math.sin((atrialPhase - 5) * (Math.PI / 15)) * 0.11;
+                let q = 0; if (ecgPhase >= 22 && ecgPhase < 25) q = -0.15;
+                let r = 0; if (ecgPhase >= 25 && ecgPhase < 34) r = Math.sin((ecgPhase - 25) * (Math.PI / 9)) * 0.9; 
+                let s = 0; if (ecgPhase >= 34 && ecgPhase < 39) s = -0.3;
+                let t = 0; if (ecgPhase >= 48 && ecgPhase < 80) t = -Math.sin((ecgPhase - 48) * (Math.PI / 32)) * 0.25;
+                componenteQRS_T = q + r + s + t; return componenteQRS_T + componenteOndaP;
+            }
+            let rumoreAtriale = 0;
+            if (ritmoCorrente === "Fibrillazione") rumoreAtriale = Math.sin(ecgPhase * 0.4) * 0.06 + Math.sin(ecgPhase * 0.8) * 0.04 + (Math.random() * 0.04 - 0.02);
+            else if (ritmoCorrente === "Flutter atriale") rumoreAtriale = Math.sin(ecgPhase * 0.4) * 0.07;
+            let p = 0; if (ritmoCorrente !== "Fibrillazione" && ritmoCorrente !== "Flutter atriale" && ecgPhase > 5 && ecgPhase < 20) p = Math.sin((ecgPhase - 5) * (Math.PI / 15)) * 0.09;
+            let q = 0; if (ecgPhase >= 22 && ecgPhase < 25) q = -0.12;
+            let r = 0; if (ecgPhase >= 25 && ecgPhase < 30) { r = Math.sin((ecgPhase - 25) * (Math.PI / 5)) * 1.1; if (ritmoCorrente === "IMA") r *= 1.2; }
+            let s = 0; if (ecgPhase >= 30 && ecgPhase < 34) s = -0.28;
+            let t = 0; if (ecgPhase >= 42 && ecgPhase < 65) { let tFactor = (ritmoCorrente === "IMA") ? 0.45 : 0.16; t = Math.sin((ecgPhase - 42) * (Math.PI / 23)) * tFactor; }
+            return p + q + r + s + t + rumoreAtriale;
+        }
+
+        function getPlethSample() {
+            const ritmiSenzaPolso = ["Non in lettura", "Asistolia", "TV senza polso", "FV", "Torsione di punta"];
+            if (!spo2IsConnected || valoriAttuali.fc === 0 || ritmiSenzaPolso.includes(ritmoCorrente)) return 0;
+            if (plethPhase < 20) return Math.sin(parseFloat(plethPhase) * (Math.PI / 40)) * 0.75; 
+            else if (plethPhase >= 20 && plethPhase < 32) return 0.75 - Math.sin((plethPhase - 20) * (Math.PI / 24)) * 0.25; 
+            else if (plethPhase >= 32 && plethPhase < 40) return 0.5 + Math.sin((plethPhase - 32) * (Math.PI / 16)) * 0.07; 
+            else if (plethPhase >= 40 && plethPhase < 70) return 0.57 * Math.exp(-(plethPhase - 40) * 0.06); 
+            return 0;
+        }
+
+        function getEtco2Sample() {
+            if (!etco2IsConnected || valoriAttuali.fr === 0 || ritmoCorrente === "Non in lettura") return 0;
+            if (etco2Phase >= 0 && etco2Phase < 15) return Math.sin((etco2Phase / 15) * (Math.PI / 2));
+            else if (etco2Phase >= 15 && etco2Phase < 65) return 1.0 + ((etco2Phase - 15) * 0.001);
+            else if (etco2Phase >= 65 && etco2Phase < 75) return 1.0 - ((etco2Phase - 65) / 10);
+            return 0;
+        }
+
+        function drawLoop() {
+            if (canvasEcg.width > 0 && canvasEcg.height > 0) {
+                const hEcg = canvasEcg.height, midEcg = hEcg / 2;
+                let fcRiferimento = valoriAttuali.fc > 0 ? valoriAttuali.fc : 60;
+                if (lp35Mode === "PACING" && mASelezionati >= sogliaCatturaMAnumerica) fcRiferimento = bpmSelezionati; 
+                
+                let maxPhaseEcg = (60 / fcRiferimento) * 135; 
+                if (maxPhaseEcg < 65) maxPhaseEcg = 65; if (maxPhaseEcg > 400) maxPhaseEcg = 400;
+                if (["FV", "Torsione di punta", "TV con polso", "TV senza polso"].includes(ritmoCorrente)) maxPhaseEcg = 90; 
+                if (ritmoCorrente === "Fibrillazione") { maxPhaseEcg += faRROffset; if (maxPhaseEcg < 55) maxPhaseEcg = 55; }
+
+                ecgPhase += 1.4; 
+                if (ecgPhase >= maxPhaseEcg) {
+                    ecgPhase = 0;
+                    faRROffset = (ritmoCorrente === "Fibrillazione") ? (Math.random() * 80) - 40 : 0;
+                }
+
+                let maxPhaseAtrial = (60 / 75) * 135;
+                atrialPhase += 1.4; if (atrialPhase >= maxPhaseAtrial) atrialPhase = 0;
+
+                let sampleEcg = getEcgSample(), yEcg = midEcg - (sampleEcg * (midEcg * 0.75));
+                ctxEcg.fillStyle = "#050505"; ctxEcg.fillRect(posX, 0, sweepWidth, hEcg);
+                ctxEcg.strokeStyle = "#2ecc71"; ctxEcg.lineWidth = 2.6;
+                ctxEcg.shadowBlur = 1; ctxEcg.shadowColor = "#2ecc71";
+                if (posX === 0) ctxEcg.beginPath();
+                ctxEcg.lineTo(posX, yEcg); ctxEcg.stroke();
+
+                if (lp35Mode === "SYNC" && ecgIsConnected && (ritmoCorrente.startsWith("Sinusale") || ritmoCorrente === "IMA" || ritmoCorrente === "Fibrillazione")) {
+                    if (ecgPhase >= 26 && ecgPhase < 28) {
+                        ctxEcg.fillStyle = "#ffff00"; ctxEcg.fillRect(posX, yEcg - 25, 3, 15);
+                        ctxEcg.font = "bold 10px Arial"; ctxEcg.fillText("▼ SHK", posX - 12, yEcg - 30);
+                    }
+                }
+
+                const hPleth = canvasPleth.height, midPleth = hPleth / 2;
+                plethPhase += 1.4; if (plethPhase >= maxPhaseEcg) plethPhase = 0;
+                let samplePleth = getPlethSample(), yPleth = (midPleth + 15) - (samplePleth * (midPleth * 0.65));
+                ctxPleth.fillStyle = "#050505"; ctxPleth.fillRect(posX, 0, sweepWidth, hPleth);
+                ctxPleth.strokeStyle = "#2980b9"; ctxPleth.lineWidth = 2.6;
+                ctxPleth.shadowBlur = 1; ctxPleth.shadowColor = "#2980b9";
+                if (posX === 0) ctxPleth.beginPath();
+                ctxPleth.lineTo(posX, yPleth); ctxPleth.stroke();
+
+                const hEtco2 = canvasEtco2.height;
+                let frRiferimento = valoriAttuali.fr > 0 ? valoriAttuali.fr : 14;
+                let maxPhaseEtco2 = (60 / frRiferimento) * 55;
+                etco2Phase += 2.0; if (etco2Phase >= maxPhaseEtco2) etco2Phase = 0;
+                let sampleEtco2 = getEtco2Sample(), altezzaFattore = (valoriAttuali.etco2 / 65) * (hEtco2 * 0.65), yEtco2 = (hEtco2 - 10) - (sampleEtco2 * altezzaFattore);
+                ctxEtco2.fillStyle = "#050505"; ctxEtco2.fillRect(posX, 0, sweepWidth, hEtco2);
+                ctxEtco2.strokeStyle = "#e67e22"; ctxEtco2.lineWidth = 2.6;
+                ctxEtco2.shadowBlur = 1; ctxEtco2.shadowColor = "#e67e22";
+                if (posX === 0) ctxEtco2.beginPath();
+                ctxEtco2.lineTo(posX, yEtco2); ctxEtco2.stroke();
+
+                posX += speed;
+                if (posX >= canvasEcg.width) { posX = 0; ctxEcg.beginPath(); ctxPleth.beginPath(); ctxEtco2.beginPath(); }
+            }
+            requestAnimationFrame(drawLoop);
+        }
+
+        function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume(); }
 
         function suonaAudioTerapia(tipo) {
             initAudio(); if (!audioCtx) return;
-            
             if (tipo === 'clic') {
                 let osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
                 osc.type = 'sine'; osc.frequency.setValueAtTime(600, audioCtx.currentTime);
                 gain.gain.setValueAtTime(0.1, audioCtx.currentTime); osc.connect(gain);
                 gain.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + 0.05);
             } else if (tipo === 'carica') {
-                const audioFile = document.getElementById('audio-carica-file');
-                audioFile.currentTime = 0; audioFile.play().catch(e => console.log("Errore audio carica:", e));
+                const audioFile = document.getElementById('audio-carica-file'); audioFile.currentTime = 0; audioFile.play().catch(e => console.log(e));
             } else if (tipo === 'pronto') {
                 let osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
                 osc.type = 'sine'; osc.frequency.setValueAtTime(1040, audioCtx.currentTime);
                 gain.gain.setValueAtTime(0.2, audioCtx.currentTime); osc.connect(gain);
                 gain.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + 0.6);
             } else if (tipo === 'scarica') {
-                let bufferSize = audioCtx.sampleRate * 0.25;
-                let buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-                let data = buffer.getChannelData(0);
+                let bufferSize = audioCtx.sampleRate * 0.25, buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate), data = buffer.getChannelData(0);
                 for (let i = 0; i < bufferSize; i++) {
-                    let t = i / audioCtx.sampleRate, rumore = Math.random() * 2 - 1;
-                    let ondaQuadra = Math.sin(2 * Math.PI * 50 * t) > 0 ? 0.5 : -0.5;
+                    let t = i / audioCtx.sampleRate, rumore = Math.random() * 2 - 1, ondaQuadra = Math.sin(2 * Math.PI * 50 * t) > 0 ? 0.5 : -0.5;
                     data[i] = (rumore * 0.4 + ondaQuadra * 0.6) * Math.exp(-15 * t);
                 }
                 let rumoreNode = audioCtx.createBufferSource(); rumoreNode.buffer = buffer;
@@ -275,18 +578,10 @@
         }
 
         function eseguiAnalisiRitmo() {
-            suonaAudioTerapia('clic');
-            if (!ecgIsConnected) {
-                segnalaAzioneAlRegista("Tentata ANALISI ma i cavi ECG sono SCOLLEGATI!");
-                return;
-            }
-            segnalaAzioneAlRegista("Avviata analisi del ritmo ECG...");
-            const ritmiDefibrillabili = ["FV", "TV senza polso", "TV con polso", "Torsione di punta"];
-            
-            document.getElementById('audio-consigliato').pause();
-            document.getElementById('audio-non-consigliato').pause();
-            document.getElementById('audio-consigliato').currentTime = 0;
-            document.getElementById('audio-non-consigliato').currentTime = 0;
+            suonaAudioTerapia('clic'); if (!ecgIsConnected) return;
+            const ritmiDefibrillabili = ["FV", "TV senza polso", "Torsione di punta"];
+            document.getElementById('audio-consigliato').pause(); document.getElementById('audio-non-consigliato').pause();
+            document.getElementById('audio-consigliato').currentTime = 0; document.getElementById('audio-non-consigliato').currentTime = 0;
 
             if (ritmiDefibrillabili.includes(ritmoCorrente)) {
                 document.getElementById('audio-consigliato').play().catch(e => console.log(e));
@@ -322,27 +617,33 @@
         function impostaLp35Mode(nuovaMode) {
             suonaAudioTerapia('clic'); lp35Mode = nuovaMode;
             document.querySelectorAll('.tab-mode').forEach(t => t.classList.remove('attivo'));
-            document.getElementById('tab-' + nuevaMode.toLowerCase()).classList.add('attivo');
-            annullaCaricaLP35(); 
-            aggiornaInterfacciaLP35(); 
-            rigeneraTastieraTerapia();
-            
-            aggiornaTracciatoVisivo(ritmoCorrente, valoriAttuali.fc, ecgIsConnected, spo2IsConnected);
+            document.getElementById('tab-' + nuovaMode.toLowerCase()).classList.add('attivo');
+            annullaCaricaLP35(); aggiornaInterfacciaLP35(); rigeneraTastieraTerapia();
+            document.getElementById('label-derivazione').innerText = (nuovaMode === "SYNC") ? "II SYNC" : "II";
             segnalaAzioneAlRegista("Cambio Modalità: " + nuovaMode);
         }
 
         function aggiornaInterfacciaLP35() {
             const dispEnergia = document.getElementById('display-lp35-energia'), dispBpm = document.getElementById('display-lp35-bpm');
             const containerBpm = document.getElementById('container-box-bpm'), boxEnergia = document.getElementById('container-box-energia'), labelBoxEnergia = document.getElementById('label-box-energia');
+            
             if (lp35Mode === "DEFIB" || lp35Mode === "SYNC") {
-                containerBpm.style.visibility = "hidden"; containerBpm.style.width = "0px"; containerBpm.style.padding = "0";
-                boxEnergia.style.width = "140px"; labelBoxEnergia.innerHTML = "Seleziona energia";
-                dispEnergia.innerText = jouleSelezionati ? jouleSelezionati + " J" : "--- J";
+                containerBpm.style.visibility = "hidden"; containerBpm.style.width = "0px"; containerBpm.style.padding = "0"; boxEnergia.style.width = "140px";
+                labelBoxEnergia.innerHTML = "Seleziona energia"; dispEnergia.innerText = jouleSelezionati ? jouleSelezionati + " J" : "--- J";
+                aggiornaValoreNumericoFC();
             } else if (lp35Mode === "PACING") {
                 containerBpm.style.visibility = "visible"; containerBpm.style.width = "110px"; containerBpm.style.padding = "10px"; containerBpm.style.border = "2px solid #365da8";
-                boxEnergia.style.width = "110px"; labelBoxEnergia.innerHTML = "Corrente";
-                dispBpm.innerText = bpmSelezionati + " Bpm"; dispEnergia.innerText = mASelezionati + " mA";
+                boxEnergia.style.width = "110px"; labelBoxEnergia.innerHTML = "Corrente"; dispBpm.innerText = bpmSelezionati + " Bpm"; dispEnergia.innerText = mASelezionati + " mA";
+                aggiornaValoreNumericoFC();
             }
+        }
+
+        function aggiornaValoreNumericoFC() {
+            const displayFcNumerica = document.getElementById('m-fc');
+            if (!ecgIsConnected) { displayFcNumerica.innerText = "--"; return; }
+            if (lp35Mode === "PACING" && mASelezionati >= sogliaCatturaMAnumerica) displayFcNumerica.innerText = bpmSelezionati; 
+            else displayFcNumerica.innerText = valoriAttuali.fc === 0 ? "0" : valoriAttuali.fc;
+            valutaSoglieAllarme();
         }
 
         function avviaCaricaLP35() {
@@ -353,24 +654,14 @@
                 if (dispEnergia.innerText !== "CARICA...") return;
                 lp35Carico = true; dispEnergia.innerText = "PRONTO"; suonaAudioTerapia('pronto');
                 btnCarica.classList.add('pronto'); btnScarica.classList.add('pronto');
-                segnalaAzioneAlRegista(`LP35 CARICO a ${jouleSelezionati}J in modalità ${lp35Mode}`);
+                segnalaAzioneAlRegista(`LP35 CARICO a ${jouleSelezionati}J`);
             }, 2500);
         }
 
         function eseguiScaricaLP35() {
             if (!lp35Carico) return;
-            document.getElementById('audio-carica-file').pause(); 
-            suonaAudioTerapia('scarica');
-            
-            if (conn && conn.open) { 
-                conn.send({ 
-                    azioneStudente: `SCARICA EROGATA a ${jouleSelezionati}J in modalità ${lp35Mode}`,
-                    datiScarica: {
-                        joule: jouleSelezionati,
-                        modalita: lp35Mode
-                    }
-                }); 
-            }
+            document.getElementById('audio-carica-file').pause(); suonaAudioTerapia('scarica');
+            if (conn && conn.open) conn.send({ azioneStudente: `SCARICA EROGATA a ${jouleSelezionati}J`, datiScarica: { joule: jouleSelezionati, modalita: lp35Mode } }); 
             annullaCaricaLP35();
         }
 
@@ -381,26 +672,17 @@
         }
 
         function avviaMisurazionePSNI() {
-            if (psniInCorso) return;
+            if (psniInCorso || !ecgIsConnected) return; 
             initAudio(); psniInCorso = true;
-            segnalaAzioneAlRegista("Avviata misurazione Pressione (PSNI)");
-            
-            const btnPsni = document.getElementById('btn-hw-psni');
-            const displayPa = document.getElementById('m-pa');
+            const btnPsni = document.getElementById('btn-hw-psni'), displayPa = document.getElementById('m-pa');
             btnPsni.classList.add('misurazione-in-corso');
+            const audioBracciale = document.getElementById('audio-bracciale-file'); audioBracciale.currentTime = 0; audioBracciale.play().catch(e => console.error(e));
 
-            const audioBracciale = document.getElementById('audio-bracciale-file');
-            audioBracciale.currentTime = 0;
-            audioBracciale.play().catch(e => console.error("Errore audio bracciale:", e));
-
-            let pressioneAttuale = 0;
-            const piccoMassimo = targetPAS + 20;
-
+            let pressioneAttuale = 0, piccoMassimo = targetPAS + 20;
             let intervalloGonfiaggio = setInterval(() => {
                 pressioneAttuale += Math.floor(Math.random() * 12) + 8;
                 if (pressioneAttuale >= piccoMassimo) {
-                    pressioneAttuale = piccoMassimo;
-                    clearInterval(intervalloGonfiaggio);
+                    pressioneAttuale = piccoMassimo; clearInterval(intervalloGonfiaggio);
                     setTimeout(() => { avviaSgonfiaggioPSNI(pressioneAttuale); }, 600);
                 }
                 displayPa.innerText = `CUFF: ${pressioneAttuale}`;
@@ -408,28 +690,18 @@
         }
 
         function avviaSgonfiaggioPSNI(partenza) {
-            const displayPa = document.getElementById('m-pa');
-            let pressioneAttuale = partenza;
-
+            const displayPa = document.getElementById('m-pa'); let pressioneAttuale = partenza;
             let intervalloSgonfiaggio = setInterval(() => {
                 pressioneAttuale -= Math.floor(Math.random() * 4) + 3;
-                if (pressioneActuale <= targetPAD) {
-                    clearInterval(intervalloSgonfiaggio);
-                    document.getElementById('audio-bracciale-file').pause();
+                if (pressioneAttuale <= targetPAD) {
+                    clearInterval(intervalloSgonfiaggio); document.getElementById('audio-bracciale-file').pause();
                     psniInCorso = false; haMisuratoAlmenoUnaVolta = true;
                     document.getElementById('btn-hw-psni').classList.remove('misurazione-in-corso');
-                    
-                    // ACQUISIZIONE STATICA: Solo ora salviamo e stampiamo i valori correnti della regia
-                    valoriAttuali.pas = targetPAS;
-                    pressioneVisualizzataPAS = targetPAS;
-                    pressioneVisualizzataPAD = targetPAD;
-                    
+                    valoriAttuali.pas = targetPAS; pressioneVisualizzataPAS = targetPAS; pressioneVisualizzataPAD = targetPAD;
                     displayPa.innerText = `${pressioneVisualizzataPAS}/${pressioneVisualizzataPAD}`;
                     valutaSoglieAllarme();
-                    segnalaAzioneAlRegista(`Misurazione completata: Rilevata PA ${targetPAS}/${targetPAD} mmHg`);
-                } else {
-                    displayPa.innerText = `CUFF: ${pressioneAttuale}`;
-                }
+                    segnalaAzioneAlRegista(`Misurazione completata: Rilevata PA ${targetPAS}/${targetPAD}`);
+                } else displayPa.innerText = `CUFF: ${pressioneAttuale}`;
             }, 200);
         }
 
@@ -437,8 +709,8 @@
 
         function valutaSoglieAllarme() {
             const rowFc = document.getElementById('row-fc'), rowPa = document.getElementById('row-pa'), rowSpo2 = document.getElementById('row-spo2'), rowEtco2 = document.getElementById('row-etco2');
-            
-            let fcInAllarme = ecgIsConnected && (valoriAttuali.fc < 50 || valoriAttuali.fc > 110);
+            let fcAttualeRiferimento = (lp35Mode === "PACING" && mASelezionati >= sogliaCatturaMAnumerica) ? bpmSelezionati : valoriAttuali.fc;
+            let fcInAllarme = ecgIsConnected && (fcAttualeRiferimento < 50 || fcAttualeRiferimento > 110);
             let paInAllarme = ecgIsConnected && !psniInCorso && haMisuratoAlmenoUnaVolta && (valoriAttuali.pas < 90 || valoriAttuali.pas > 180);
             let spo2InAllarme = spo2IsConnected && (valoriAttuali.spo2 < 88);
             let etco2InAllarme = etco2IsConnected && (valoriAttuali.etco2 < 30 || valoriAttuali.etco2 > 45);
@@ -453,105 +725,71 @@
             } else { if (allarmeSuonoAttivo) { allarmeSuonoAttivo = false; clearInterval(allarmeInterval); } }
         }
 
-        function aggiornaTracciatoVisivo(ritmo, fc, ecgConnected, spo2Connected) {
-            const img1 = document.getElementById('ecg-img-1'), img2 = document.getElementById('ecg-img-2');
-            const plethImg1 = document.getElementById('pleth-img-1'), plethImg2 = document.getElementById('pleth-img-2');
-            
-            const ecgScroller = document.getElementById('ecg-scroller'), ecgPiatta = document.getElementById('ecg-piatta');
-            const plethScroller = document.getElementById('pleth-scroller'), plethPiatta = document.getElementById('pleth-piatta');
-            
-            if (ecgConnected === false) {
-                ecgScroller.style.display = "none"; ecgPiatta.style.display = "block";
-            } else {
-                ecgScroller.style.display = "flex"; ecgPiatta.style.display = "none";
-                
-                let nomeFileECG = mappeImmagini[ritmo] || "sinusale.png";
-                if (lp35Mode === "SYNC") {
-                    if (mappeImmaginiSincro[ritmo]) {
-                        nomeFileECG = mappeImmaginiSincro[ritmo];
-                    } else if (nomeFileECG.endsWith(".png")) {
-                        nomeFileECG = nomeFileECG.replace(".png", "_sincro.png");
-                    }
-                }
-                
-                img1.src = "ritmi/" + nomeFileECG; 
-                img2.src = "ritmi/" + nomeFileECG;
-            }
-
-            const ritmiSenzaPolso = ["Non in lettura", "Asistolia", "TV senza polso", "FV", "Torsione di punta"];
-            
-            if (spo2Connected === false || fc === 0 || ritmiSenzaPolso.includes(ritmo)) {
-                plethScroller.style.display = "none"; plethPiatta.style.display = "block";
-            } else {
-                plethScroller.style.display = "flex"; plethPiatta.style.display = "none";
-                const nomeFilePleth = mappePleth[ritmo] || "sinusale_pleth.png";
-                plethImg1.src = "ritmi/" + nomeFilePleth; plethImg2.src = "ritmi/" + nomeFilePleth;
-            }
-            
-            let secondiAnimazione = 15; if (fc > 0) { secondiAnimazione = (60 / fc) * 18; }
-            document.querySelectorAll('.scroller-img').forEach(el => { el.style.animationDuration = secondiAnimazione + "s"; });
-        }
-
         btnConnetti.addEventListener('click', () => {
-            const pin = pinInput.value.trim(); if(pin.length !== 4) return alert("PIN Errato");
-            statoSetup.innerText = "Connessione..."; initAudio(); 
+            const pin = pinInput.value.trim(); 
+            if(pin.length !== 4) return alert("PIN Errato");
+            
+            statoSetup.innerText = "Connessione..."; 
+            initAudio(); 
+            
             peer = new Peer("sim-monitor-" + pin);
+            
             peer.on('open', () => {
                 conn = peer.connect("sim-regista-" + pin);
-                conn.on('open', () => { document.getElementById('setup-screen').style.display = 'none'; });
+                
+                conn.on('open', () => { 
+                    document.getElementById('setup-screen').style.display = 'none'; 
+                    resizeCanvas(); 
+                });
+                
                 conn.on('data', (data) => {
-                    if(data.ecgConnected !== undefined) ecgIsConnected = data.ecgConnected;
-                    if(data.spo2Connected !== undefined) spo2IsConnected = data.spo2Connected;
-                    if(data.etco2Connected !== undefined) etco2IsConnected = data.etco2Connected;
-
-                    if(data.fc !== undefined) { 
-                        valoriAttuali.fc = parseInt(data.fc); 
-                        document.getElementById('m-fc').innerText = (!ecgIsConnected) ? "--" : (valoriAttuali.fc === 0 ? "0" : valoriAttuali.fc); 
-                    }
-                    
-                    // Memorizziamo i target in background ma NON li stampiamo a schermo
-                    if(data.pas !== undefined) targetPAS = parseInt(data.pas);
-                    if(data.pad !== undefined) targetPAD = parseInt(data.pad);
-                    
-                    // Gestione del display NIBP: si aggiorna solo se non c'è una cuffia attiva in questo istante
-                    if(!psniInCorso) {
-                        if (!haMisuratoAlmenoUnaVolta) {
-                            document.getElementById('m-pa').innerText = "--/--";
-                        } else {
-                            // Mantiene visualizzato l'ultimo valore statico congelato
-                            document.getElementById('m-pa').innerText = `${pressioneVisualizzataPAS}/${pressioneVisualizzataPAD}`;
-                        }
-                    }
-
-                    if(data.spo2 !== undefined) { 
-                        valoriAttuali.spo2 = parseInt(data.spo2); 
-                        document.getElementById('m-spo2').innerText = (!spo2IsConnected) ? "--" : (valoriAttuali.spo2 === 0 ? "0" : valoriAttuali.spo2); 
-                    }
-                    if(data.fr !== undefined) {
-                        document.getElementById('m-fr').innerText = (!ecgIsConnected) ? "--" : data.fr;
-                    }
-                    if(data.etco2 !== undefined) {
-                        valoriAttuali.etco2 = parseInt(data.etco2);
-                        document.getElementById('m-etco2').innerText = (!etco2IsConnected) ? "--" : data.etco2;
-                    }
-                    
-                    valutaSoglieAllarme();
-                    
-                    if(data.ritmo !== undefined) { 
-                        ritmoCorrente = data.ritmo;
-                        aggiornaTracciatoVisivo(data.ritmo, valoriAttuali.fc, ecgIsConnected, spo2IsConnected);
-                    }
+                    elaboraDatiRegia(data);
                 });
             });
-            peer.on('error', () => { statoSetup.innerText = "Errore PIN."; peer.destroy(); });
+
+            peer.on('connection', (incomingConn) => {
+                conn = incomingConn;
+                conn.on('data', (data) => {
+                    elaboraDatiRegia(data);
+                });
+            });
+
+            peer.on('error', () => { 
+                statoSetup.innerText = "Errore PIN."; 
+                peer.destroy(); 
+            });
         });
 
+        function elaboraDatiRegia(data) {
+            if(data.ecgConnected !== undefined) ecgIsConnected = data.ecgConnected;
+            if(data.spo2Connected !== undefined) spo2IsConnected = data.spo2Connected;
+            if(data.etco2Connected !== undefined) etco2IsConnected = data.etco2Connected;
+            if(data.fc !== undefined) valoriAttuali.fc = parseInt(data.fc);
+            if(data.sogliaPacingRegia !== undefined) sogliaCatturaMAnumerica = parseInt(data.sogliaPacingRegia);
+            if(data.pas !== undefined) targetPAS = parseInt(data.pas);
+            if(data.pad !== undefined) targetPAD = parseInt(data.pad);
+            if(data.ritmo !== undefined) ritmoCorrente = data.ritmo;
+
+            if(data.immagine12Lead !== undefined && data.immagine12Lead !== "") {
+                stringaImmagineRicevuta12L = data.immagine12Lead;
+            }
+            if(data.comando === "AVVIA_12_LEAD" && data.immagine12Lead) {
+                stringaImmagineRicevuta12L = data.immagine12Lead;
+            }
+
+            const displayPa = document.getElementById('m-pa');
+            if(!psniInCorso) displayPa.innerText = haMisuratoAlmenoUnaVolta ? `${pressioneVisualizzataPAS}/${pressioneVisualizzataPAD}` : "--/--";
+
+            if(data.spo2 !== undefined) { valoriAttuali.spo2 = parseInt(data.spo2); document.getElementById('m-spo2').innerText = (!spo2IsConnected) ? "--" : (valoriAttuali.spo2 === 0 ? "0" : valoriAttuali.spo2); }
+            if(data.fr !== undefined) { valoriAttuali.fr = parseInt(data.fr); document.getElementById('m-fr').innerText = (!ecgIsConnected) ? "--" : data.fr; }
+            if(data.etco2 !== undefined) { valoriAttuali.etco2 = parseInt(data.etco2); document.getElementById('m-etco2').innerText = (!etco2IsConnected) ? "--" : data.etco2; }
+            
+            aggiornaValoreNumericoFC();
+        }
+
         rigeneraTastieraTerapia(); 
-        aggiornaInterfacciaLP35();
-        aggiornaTracciatoVisivo(ritmoCorrente, valoriAttuali.fc, ecgIsConnected, spo2IsConnected);
-        
-        document.getElementById('m-etco2').innerText = "--";
-        document.getElementById('m-fr').innerText = "--";
+        aggiornaInterfacciaLP35(); 
+        drawLoop(); 
     </script>
 </body>
 </html>

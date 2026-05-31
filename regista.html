@@ -3,243 +3,294 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lifepack G10 - Pannello Regista v9.4</title>
+    <title>Lifepack G10 - Pannello Regista v12.2</title>
     <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #1e1e2e; color: #cdd6f4; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
         h1, h2 { color: #f5c2e7; margin-bottom: 10px; }
         .container { width: 100%; max-width: 950px; background: #313244; padding: 20px; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
         .setup-box { display: flex; gap: 15px; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #45475a; }
-        input[type="number"], select { background: #11111b; color: #cdd6f4; border: 1px solid #45475a; border-radius: 6px; padding: 8px 12px; font-size: 16px; }
-        .btn { background: #a6e3a1; color: #11111b; border: none; padding: 10px 20px; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.2s; }
-        .btn:hover { background: #94e2d5; }
+        input[type="number"], select { background: #11111b; color: #cdd6f4; border: 1px solid #45475a; padding: 8px 12px; border-radius: 6px; font-size: 16px; }
+        button { background: #a6e3a1; color: #11111b; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; font-size: 16px; cursor: pointer; transition: background 0.2s; }
+        button:hover { background: #94e2d5; }
         
-        .grid-regia { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 20px; margin-top: 15px; }
-        .panel { background: #1e1e2e; padding: 15px; border-radius: 8px; border: 1px solid #45475a; }
-        .control-group { margin-bottom: 15px; display: flex; flex-direction: column; gap: 5px; }
-        label { font-size: 14px; color: #bac2de; font-weight: 600; }
+        .grid-regia { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 15px; }
+        .card-controllo { background: #181825; padding: 15px; border-radius: 8px; border: 1px solid #45475a; }
         
-        .switch-group { display: flex; flex-direction: column; gap: 10px; background: #252538; padding: 12px; border-radius: 6px; margin-bottom: 15px; }
-        .switch-row { display: flex; align-items: center; justify-content: space-between; }
-        
-        /* Box speciale impostazioni scarica manuale */
-        .box-terapia-regia { background: #181825; border: 2px solid #fab387; border-radius: 8px; padding: 12px; margin-bottom: 15px; }
-        .box-terapia-regia h3 { color: #fab387; margin: 0 0 10px 0; font-size: 16px; text-transform: uppercase; text-align: center; }
+        .control-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+        label { font-weight: 600; color: #bac2de; }
+        .slider-container { display: flex; align-items: center; gap: 10px; flex: 1; justify-content: flex-end; }
+        input[type="range"] { width: 160px; accent-color: #f5c2e7; }
+        .val-preview { width: 45px; text-align: right; font-weight: bold; color: #f5c2e7; font-family: monospace; font-size: 16px; }
 
-        .log-box { background: #11111b; border: 1px solid #45475a; border-radius: 6px; padding: 10px; height: 350px; overflow-y: auto; font-family: 'Courier New', Courier, monospace; font-size: 13px; color: #a6e3a1; }
-        .badge { background: #f38ba8; color: #11111b; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 11px; }
+        .cavi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
+        .cavo-checkbox-label { background: #313244; padding: 10px; border-radius: 6px; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; border: 1px solid #45475a; user-select: none; font-weight: bold; font-size: 13px; }
+        .cavo-checkbox-label input { width: 16px; height: 16px; accent-color: #a6e3a1; }
+        
+        #log-studenti { height: 180px; background: #11111b; border-radius: 6px; padding: 10px; overflow-y: auto; font-family: monospace; font-size: 13px; border: 1px solid #45475a; color: #a6adc8; line-height: 1.4; }
+        .badge { background: #89b4fa; color: #11111b; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 11px; margin-right: 5px; }
+
+        .area-12lead { margin-top: 15px; padding: 15px; background: #313244; border-radius: 8px; border: 1px solid #8e44ad; }
+        #anteprima-immagine-container { margin-top: 10px; display: flex; flex-direction: column; align-items: center; }
+        #img-preview-12l { max-width: 100%; max-height: 120px; border: 1px solid #555; border-radius: 4px; margin-top: 8px; display: none; }
+        .btn-file-custom { background: #8e44ad; color: #fff; position: relative; overflow: hidden; display: inline-block; padding: 10px 15px; border-radius: 6px; font-weight: bold; cursor: pointer; }
+        .btn-file-custom input[type="file"] { position: absolute; left: 0; top: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+        .stato-12l-info { font-size: 12px; color: #b4befe; margin-top: 5px; font-style: italic; }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h1>Lifepack G10 - Regia Cloni</h1>
+        <h1>Lifepack G10 - Pannello Regista</h1>
         
         <div class="setup-box">
-            <label for="pin-regista">PIN Regia:</label>
-            <input type="number" id="pin-regista" value="1234" style="width: 100px;">
-            <button class="btn" id="btn-attiva-regia">Attiva Server Regia</button>
-            <span id="stato-connessione" style="color: #fab387; font-weight: bold;">Disconnesso</span>
+            <label for="pin-regista">PIN di Sincronizzazione:</label>
+            <input type="number" id="pin-regista" value="1234" style="width: 90px; text-align: center;">
+            <button id="btn-avvia-regia">Attiva Cabina Regia</button>
+            <span id="stato-connessione" style="font-weight: bold; color: #f38ba8; margin-left: 10px;">🔴 OFF-LINE</span>
         </div>
 
         <div class="grid-regia">
-            <div class="panel">
-                
-                <div class="box-terapia-regia">
-                    <h3>Opzioni Esito Post-Scarica</h3>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                        <div class="control-group">
-                            <label for="regia-esito-scarica">Se Scarica Corretta:</label>
-                            <select id="regia-esito-scarica">
-                                <option value="SUCCESSO_SINUSALE">Successo -> Sinusale</option>
-                                <option value="SUCCESSO_TACT">Successo -> Tachicardia Sin.</option>
-                                <option value="FALLIMENTO">Fallimento (Resta Invariato)</option>
-                                <option value="ASISTOLIA">Vai in Asistolia</option>
-                                <option value="PEA">Genera PEA (Ritmo senza polso)</option>
-                            </select>
-                        </div>
-                        <div class="control-group">
-                            <label for="regia-joule-soglia">Soglia Minima Joule:</label>
-                            <input type="number" id="regia-joule-soglia" value="150" min="0" max="360" style="text-align: center;">
-                        </div>
-                    </div>
-                </div>
-
+            <div class="card-controllo">
                 <h2>Parametri Vitali</h2>
                 
-                <div class="switch-group">
-                    <div class="switch-row">
-                        <label>Cavo ECG Collegato:</label>
-                        <input type="checkbox" id="c-ecg-connected" onchange="inviaParametri()">
-                    </div>
-                    <div class="switch-row">
-                        <label>Sensore SpO2 Collegato:</label>
-                        <input type="checkbox" id="c-spo2-connected" onchange="inviaParametri()">
-                    </div>
-                    <div class="switch-row">
-                        <label>Modulo EndTidal (EtCO2) Coll.:</label>
-                        <input type="checkbox" id="c-etco2-connected" onchange="inviaParametri()">
-                    </div>
-                </div>
-
-                <div class="control-group">
-                    <label for="r-ritmo">Ritmo ECG:</label>
-                    <select id="r-ritmo" onchange="inviaParametri()">
+                <div class="control-row">
+                    <label>Ritmo Principale:</label>
+                    <select id="r-ritmo" onchange="inviaParametriAlMonitor()" style="width: 180px;">
                         <option value="Sinusale">Sinusale Normale</option>
-                        <option value="Sinusale tact">Tachicardia Sinusale</option>
-                        <option value="Sinusale brac">Bradicardia Sinusale</option>
+                        <option value="Tachicardia Sinusale">Tachicardia Sinusale</option>
+                        <option value="Bradicardia Sinusale">Bradicardia Sinusale</option>
+                        <option value="IMA">IMA (SSTENE + SopraST)</option>
                         <option value="Fibrillazione">Fibrillazione Atriale</option>
                         <option value="Flutter atriale">Flutter Atriale</option>
-                        <option value="TPSV">TPSV</option>
-                        <option value="IMA">STEMI (IMA)</option>
                         <option value="BAV 3">BAV III Grado</option>
                         <option value="TV con polso">TV con Polso</option>
-                        <option value="TV senza polso">TV senza Polso ⚡</option>
-                        <option value="FV">FV (Fibrillazione Ventricolare) ⚡</option>
-                        <option value="Torsione di punta">Torsione di Punta ⚡</option>
-                        <option value="Asistolia">Asistolia ❌</option>
-                        <option value="Non in lettura">Linea Piatta / No Segnale</option>
+                        <option value="TV senza polso">TV senza Polso</option>
+                        <option value="FV">Fibrillazione Ventricolare</option>
+                        <option value="Torsione di punta">Torsione di Punta</option>
+                        <option value="Asistolia">Asistolia</option>
                     </select>
                 </div>
 
-                <div class="control-group">
-                    <label for="r-fc">Frequenza Cardiaca (HR):</label>
-                    <input type="number" id="r-fc" value="72" min="0" max="250" oninput="inviaParametri()">
-                </div>
-
-                <div class="control-group">
-                    <label>Pressione Arteriosa (NIBP):</label>
-                    <div style="display: flex; gap: 10px;">
-                        <input type="number" id="r-pas" value="120" placeholder="Sistolica" style="width: 45%;" oninput="inviaParametri()">
-                        <input type="number" id="r-pad" value="80" placeholder="Diastolica" style="width: 45%;" oninput="inviaParametri()">
+                <div class="control-row">
+                    <label>Frequenza Cardiaca (HR):</label>
+                    <div class="slider-container">
+                        <input type="range" id="r-fc" min="0" max="220" value="75" oninput="aggiornaSliderLabel(this, 'val-fc')">
+                        <div class="val-preview" id="val-fc">75</div>
                     </div>
                 </div>
 
-                <div class="control-group">
-                    <label for="r-spo2">Saturazione O2 (SpO2 %):</label>
-                    <input type="number" id="r-spo2" value="98" min="0" max="100" oninput="inviaParametri()">
+                <div class="control-row">
+                    <label>Saturazione (SpO2 %):</label>
+                    <div class="slider-container">
+                        <input type="range" id="r-spo2" min="50" max="100" value="98" oninput="aggiornaSliderLabel(this, 'val-spo2')">
+                        <div class="val-preview" id="val-spo2">98</div>
+                    </div>
                 </div>
 
-                <div class="control-group">
-                    <label for="r-etco2">Valore EtCO2 (mmHg):</label>
-                    <input type="number" id="r-etco2" value="38" min="0" max="75" oninput="inviaParametri()">
+                <div class="control-row">
+                    <label>Valore EtCO2 (mmHg):</label>
+                    <div class="slider-container">
+                        <input type="range" id="r-etco2" min="0" max="75" value="36" oninput="aggiornaSliderLabel(this, 'val-etco2')">
+                        <div class="val-preview" id="val-etco2">36</div>
+                    </div>
                 </div>
 
-                <div class="control-group">
-                    <label for="r-fr">Frequenza Respiratoria (FR):</label>
-                    <input type="number" id="r-fr" value="14" min="0" max="60" oninput="inviaParametri()">
+                <div class="control-row">
+                    <label>Freq. Respiratoria (FR):</label>
+                    <div class="slider-container">
+                        <input type="range" id="r-fr" min="0" max="45" value="14" oninput="aggiornaSliderLabel(this, 'val-fr')">
+                        <div class="val-preview" id="val-fr">14</div>
+                    </div>
+                </div>
+
+                <div class="control-row">
+                    <label>Pressione Arteriosa (NIBP):</label>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <input type="number" id="r-pas" value="120" style="width: 55px; padding: 4px; text-align: center;" onchange="inviaParametriAlMonitor()">
+                        <span style="color: #89b4fa;">/</span>
+                        <input type="number" id="r-pad" value="80" style="width: 55px; padding: 4px; text-align: center;" onchange="inviaParametriAlMonitor()">
+                        <span style="font-size: 12px; color: #6c7086;">mmHg</span>
+                    </div>
+                </div>
+
+                <div class="control-row" style="margin-top: 15px; border-top: 1px solid #313244; padding-top: 12px;">
+                    <label>Soglia mA Pacing (Cattura):</label>
+                    <div class="slider-container">
+                        <input type="range" id="r-pacing-soglia" min="10" max="150" value="50" oninput="aggiornaSliderLabel(this, 'val-pacing-soglia')">
+                        <div class="val-preview" id="val-pacing-soglia">50</div>
+                    </div>
                 </div>
             </div>
 
-            <div class="panel">
-                <h2>Log Azioni Monitor Studente</h2>
-                <div class="log-box" id="log-studenti">In attesa di azioni dalla plancia shock/pacing...</div>
+            <div style="display: flex; flex-direction: column; gap: 15px;">
+                <div class="card-controllo">
+                    <h2>Stato Collegamento Cavi</h2>
+                    <div class="cavi-grid">
+                        <label class="cavo-checkbox-label">
+                            <input type="checkbox" id="c-ecg-connected" onchange="inviaParametriAlMonitor()"> ECG (3 Cavi)
+                        </label>
+                        <label class="cavo-checkbox-label">
+                            <input type="checkbox" id="c-spo2-connected" onchange="inviaParametriAlMonitor()"> Sensore SpO2
+                        </label>
+                        <label class="cavo-checkbox-label">
+                            <input type="checkbox" id="c-etco2-connected" onchange="inviaParametriAlMonitor()"> Linea EtCO2
+                        </label>
+                    </div>
+                </div>
+
+                <div class="area-12lead">
+                    <h2 style="color: #cba6f7; margin-top: 0; font-size: 16px;">📑 File Referto ECG 12 LEAD</h2>
+                    <div id="anteprima-immagine-container">
+                        <div class="btn-file-custom">
+                            📁 Carica Tracciato ECG (Immagine)
+                            <input type="file" id="file-input-12l" accept="image/*">
+                        </div>
+                        <div class="stato-12l-info" id="stato-file-12l">Nessun file inserito. Il monitor mostrerà "Errore" se testato.</div>
+                        <img id="img-preview-12l" src="" alt="Anteprima">
+                    </div>
+                </div>
             </div>
+        </div>
+
+        <div class="card-controllo" style="margin-top: 20px; border: 1px solid #fab387;">
+            <h2 style="color: #fab387;">⚡ Pianificazione Ritmo Post-Scarica</h2>
+            <div style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <label>Energia Minima (Joule):</label>
+                    <input type="number" id="p-energia-soglia" value="200" min="0" max="360" style="width: 70px; text-align: center;">
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <label>Nuovo Ritmo:</label>
+                    <select id="p-ritmo-successivo" style="width: 180px;">
+                        <option value="Sinusale">Sinusale Normale</option>
+                        <option value="Tachicardia Sinusale">Tachicardia Sinusale</option>
+                        <option value="Bradicardia Sinusale">Bradicardia Sinusale</option>
+                        <option value="IMA">IMA (SSTENE + SopraST)</option>
+                        <option value="Fibrillazione">Fibrillazione Atriale</option>
+                        <option value="Flutter atriale">Flutter Atriale</option>
+                        <option value="BAV 3">BAV III Grado</option>
+                        <option value="TV con polso">TV con Polso</option>
+                        <option value="TV senza polso">TV senza Polso</option>
+                        <option value="FV">Fibrillazione Ventricolare</option>
+                        <option value="Torsione di punta">Torsione di Punta</option>
+                        <option value="Asistolia">Asistolia</option>
+                    </select>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <label>Nuova FC:</label>
+                    <input type="number" id="p-fc-successiva" value="75" min="0" max="220" style="width: 60px; text-align: center;">
+                </div>
+                <div style="display: flex; align-items: center; gap: 6px;">
+                    <input type="checkbox" id="p-attiva-cambio" checked style="width: 18px; height: 18px; accent-color: #fab387; cursor:pointer;">
+                    <label for="p-attiva-cambio" style="color: #fab387; cursor: pointer; user-select:none;">Abilita automatismo</label>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-controllo" style="margin-top: 20px;">
+            <h2>Log Azioni Studente sulla Plancia</h2>
+            <div id="log-studenti">In attesa di azioni dalla plancia shock/pacing...</div>
         </div>
     </div>
 
     <script>
-        const btnAttiva = document.getElementById('btn-attiva-regia');
-        const pinInput = document.getElementById('pin-regista');
+        const btnAvviaRegia = document.getElementById('btn-avvia-regia');
+        const pinRegistaInput = document.getElementById('pin-regista');
         const statoConnessione = document.getElementById('stato-connessione');
         let peer = null;
         let monitorConn = null;
+        let stringaBase64Immagine12L = ""; 
 
-        btnAttiva.addEventListener('click', () => {
-            const pin = pinInput.value.trim();
-            if (pin.length !== 4) return alert("Inserisci un PIN valido di 4 cifre!");
+        document.getElementById('file-input-12l').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
 
-            statoConnessione.innerText = "Attivazione server...";
+            document.getElementById('stato-file-12l').innerText = "Elaborazione file in corso...";
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                stringaBase64Immagine12L = event.target.result;
+                const imgPreview = document.getElementById('img-preview-12l');
+                imgPreview.src = stringaBase64Immagine12L;
+                imgPreview.style.display = "block";
+                document.getElementById('stato-file-12l').innerText = `Pronto per l'invio (${file.name})`;
+                if (monitorConn && monitorConn.open) {
+                    monitorConn.send({ immagine12Lead: stringaBase64Immagine12L });
+                }
+            };
+            reader.readAsDataURL(file);
+        });
+
+        btnAvviaRegia.addEventListener('click', () => {
+            const pin = pinRegistaInput.value.trim();
+            if (pin.length !== 4) return alert("Inserisci un PIN valido di 4 cifre");
+
+            statoConnessione.innerText = "Attivazione regia...";
             peer = new Peer("sim-regista-" + pin);
 
             peer.on('open', (id) => {
-                statoConnessione.innerText = "In attesa del Monitor...";
-                statoConnessione.style.color = "#ffff00";
+                statoConnessione.innerText = "📶 REGIA ATTIVA - IN ATTESA DEL MONITOR";
+                statoConnessione.style.color = "#f9e2af";
             });
 
-            peer.on('connection', (conn) => {
-                if (conn.peer.startsWith("sim-monitor-")) {
-                    monitorConn = conn;
-                    statoConnessione.innerText = "Monitor Sincronizzato!";
-                    statoConnessione.style.color = "#a6e3a1";
-                    
-                    setTimeout(inviaParametri, 800);
+            peer.on('connection', (connection) => {
+                monitorConn = connection;
+                statoConnessione.innerText = "🟢 MONITOR CONNESSO - DIRETTA";
+                statoConnessione.style.color = "#a6e3a1";
 
-                    monitorConn.on('data', (data) => {
-                        if (data.azioneStudente) {
-                            aggiungiAlLog(data.azioneStudente);
-                        }
+                monitorConn.on('data', (data) => {
+                    if (data.azioneStudente) {
+                        aggiungiAlLog(data.azioneStudente);
+                    }
 
-                        // Intercettazione dell'impulso della scarica
-                        if (data.datiScarica) {
-                            gestisciRitmoPostScaricaManuale(data.datiScarica.joule, data.datiScarica.modalita);
+                    // Logica automatica post-scarica
+                    if (data.datiScarica) {
+                        const cambioAbilitato = document.getElementById('p-attiva-cambio').checked;
+                        if (cambioAbilitato) {
+                            const jouleErogati = parseInt(data.datiScarica.joule);
+                            const sogliaImpostata = parseInt(document.getElementById('p-energia-soglia').value);
+
+                            if (jouleErogati >= sogliaImpostata) {
+                                const nuovoRitmo = document.getElementById('p-ritmo-successivo').value;
+                                const nuovaFC = document.getElementById('p-fc-successiva').value;
+
+                                document.getElementById('r-ritmo').value = nuovoRitmo;
+                                document.getElementById('r-fc').value = nuovaFC;
+                                document.getElementById('val-fc').innerText = nuovaFC;
+
+                                aggiungiAlLog(`⚡ AUTOMATISMO: Scarica di ${jouleErogati}J rilevata. Cambio in ${nuovoRitmo} (${nuovaFC} BPM)`);
+                                
+                                inviaParametriAlMonitor();
+                            } else {
+                                aggiungiAlLog(`⚠️ AUTOMATISMO: Scarica di ${jouleErogati}J insufficiente (Soglia: ${sogliaImpostata}J).`);
+                            }
                         }
-                    });
-                }
+                    }
+                });
+
+                monitorConn.on('close', () => {
+                    statoConnessione.innerText = "🛑 MONITOR SCONNESSO";
+                    statoConnessione.style.color = "#f38ba8";
+                });
+
+                setTimeout(() => {
+                    inviaParametriAlMonitor();
+                }, 800);
             });
 
             peer.on('error', (err) => {
                 console.error(err);
-                statoConnessione.innerText = "Errore di connessione.";
+                statoConnessione.innerText = "❌ ERRORE (PIN in uso?)";
                 statoConnessione.style.color = "#f38ba8";
             });
         });
 
-        function gestisciRitmoPostScaricaManuale(joule, modalita) {
-            const selettoreRitmo = document.getElementById('r-ritmo');
-            const ritmoPreScarica = selettoreRitmo.value;
-            
-            const esitoImpostato = document.getElementById('regia-esito-scarica').value;
-            const jouleSoglia = parseInt(document.getElementById('regia-joule-soglia').value);
-
-            // Ritmi sui cui ha senso applicare la scarica elettrica
-            const ritmiArrestoTrattabili = ["FV", "TV senza polso", "Torsione di punta"];
-            
-            let nuovoRitmo = ritmoPreScarica;
-            let logNote = "";
-
-            // Controlla se il ritmo iniziale è un ritmo defibrillabile o cardiovertibile
-            if (ritmiArrestoTrattabili.includes(ritmoPreScarica) || ritmoPreScarica === "Fibrillazione" || ritmoPreScarica === "TPSV") {
-                
-                // Controllo dei joule erogati rispetto alla scelta del formatore
-                if (joule >= jouleSoglia) {
-                    if (esitoImpostato === "SUCCESSO_SINUSALE") {
-                        nuovoRitmo = "Sinusale";
-                        document.getElementById('r-fc').value = 75;
-                        document.getElementById('r-pas').value = 115;
-                        document.getElementById('r-pad').value = 75;
-                    } else if (esitoImpostato === "SUCCESSO_TACT") {
-                        nuovoRitmo = "Sinusale tact";
-                        document.getElementById('r-fc').value = 125;
-                        document.getElementById('r-pas').value = 100;
-                        document.getElementById('r-pad').value = 60;
-                    } else if (esitoImpostato === "ASISTOLIA") {
-                        nuovoRitmo = "Asistolia";
-                        document.getElementById('r-fc').value = 0;
-                    } else if (esitoImpostato === "PEA") {
-                        nuovoRitmo = "Sinusale brac"; // Mostra un ritmo visivo ma senza polso reale (il monitor spegnerà la pleth automaticamente)
-                        document.getElementById('r-fc').value = 45;
-                    } else if (esitoImpostato === "FALLIMENTO") {
-                        logNote = " (Esito impostato su Fallimento manuale)";
-                    }
-                } else {
-                    logNote = ` (Scarica INEFFICACE: Joule erogati ${joule}J inferiori alla soglia di regia di ${jouleSoglia}J)`;
-                }
-
-                // Applica il cambio se c'è stata una variazione delle impostazioni
-                if (nuovoRitmo !== ritmoPreScarica) {
-                    selettoreRitmo.value = nuovoRitmo;
-                    aggiungiAlLog(`<b>[REGIA]</b> Shock Efficace! Ritmo convertito automaticamente da ${ritmoPreScarica} a <b>${nuovoRitmo}</b>.`);
-                } else {
-                    aggiungiAlLog(`<b>[REGIA]</b> Il ritmo resta <b>${ritmoPreScarica}</b>${logNote}.`);
-                }
-
-                // Invia i parametri aggiornati al monitor istantaneamente
-                inviaParametri();
-            }
+        function aggiornaSliderLabel(slider, labelId) {
+            document.getElementById(labelId).innerText = slider.value;
+            inviaParametriAlMonitor();
         }
 
-        function inviaParametri() {
+        function inviaParametriAlMonitor() {
             if (!monitorConn || !monitorConn.open) return;
 
             const ecgCollegato = document.getElementById('c-ecg-connected').checked;
@@ -254,9 +305,11 @@
                 fr: document.getElementById('r-fr').value,
                 etco2: document.getElementById('r-etco2').value,
                 ritmo: document.getElementById('r-ritmo').value,
+                sogliaPacingRegia: document.getElementById('r-pacing-soglia').value,
                 ecgConnected: ecgCollegato,
                 spo2Connected: spo2Collegato,
-                etco2Connected: etco2Collegato
+                etco2Connected: etco2Collegato,
+                immagine12Lead: stringaBase64Immagine12L 
             };
 
             monitorConn.send(pacchettoDati);
@@ -265,7 +318,7 @@
         function aggiungiAlLog(testo) {
             const logBox = document.getElementById('log-studenti');
             const ora = new Date().toLocaleTimeString();
-            if(logBox.innerText === "In attesa di azioni dalla plancia shock/pacing...") {
+            if (logBox.innerText === "In attesa di azioni dalla plancia shock/pacing...") {
                 logBox.innerHTML = "";
             }
             logBox.innerHTML += `<div><span class="badge">${ora}</span> ${testo}</div>`;
