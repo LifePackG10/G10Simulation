@@ -2,11 +2,24 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Monitor Lifepack G10 v12.3 - Trasmissione CO Realistica</title>
     <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
     <style>
-        body { background-color: #000; color: #fff; font-family: 'Arial', sans-serif; margin: 0; padding: 10px; height: 100vh; box-sizing: border-box; display: flex; overflow: hidden; user-select: none; }
+        body { 
+            background-color: #000; 
+            color: #fff; 
+            font-family: 'Arial', sans-serif; 
+            margin: 0; 
+            padding: 10px; 
+            height: 100dvh; 
+            box-sizing: border-box; 
+            display: flex; 
+            overflow: hidden; 
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: none;
+        }
         #setup-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #111; display: flex; justify-content: center; align-items: center; z-index: 100; }
         .setup-card { background: #222; padding: 40px; border-radius: 12px; text-align: center; }
         input[type="number"] { width: 150px; padding: 10px; font-size: 28px; text-align: center; border-radius: 6px; margin: 15px 0; background: #000; color: #fff; border: 1px solid #444; }
@@ -271,6 +284,10 @@
         let faRROffset = 0; 
         let plethPhase = 0;
         let etco2Phase = 0; 
+
+        // Blocca pinch-to-zoom e scroll accidentale su tablet
+        document.addEventListener('touchmove', function(e) { if (e.touches.length > 1) { e.preventDefault(); } }, { passive: false });
+        document.addEventListener('gesturestart', function(e) { e.preventDefault(); });
 
         function resizeCanvas() {
             canvasEcg.width = canvasEcg.parentElement.clientWidth;
@@ -690,7 +707,7 @@
         }
 
         function avviaSgonfiaggioPSNI(partenza) {
-            const displayPa = document.getElementById('m-pa'); let pressioneAttuale = partenza;
+            const displayPa = document.getElementById('m-pa'); let pressioneAttuale = departure = partenza;
             let intervalloSgonfiaggio = setInterval(() => {
                 pressioneAttuale -= Math.floor(Math.random() * 4) + 3;
                 if (pressioneAttuale <= targetPAD) {
@@ -731,6 +748,12 @@
             
             statoSetup.innerText = "Connessione..."; 
             initAudio(); 
+
+            // Richiesta automatica di Fullscreen nativo su Tablet all'atto della connessione
+            const docEl = document.documentElement;
+            if (docEl.requestFullscreen) docEl.requestFullscreen();
+            else if (docEl.webkitRequestFullscreen) docEl.webkitRequestFullscreen();
+            else if (docEl.msRequestFullscreen) docEl.msRequestFullscreen();
             
             peer = new Peer("sim-monitor-" + pin);
             
